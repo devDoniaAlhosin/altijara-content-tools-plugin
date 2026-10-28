@@ -5,7 +5,7 @@ Technical documentation for the companion WordPress plugin that adds **language 
 | | |
 |---|---|
 | **Plugin slug** | `altijara-content-tools` |
-| **Version** | 1.1.0 |
+| **Version** | 1.1.8 |
 | **Requires** | WordPress 6.0+, PHP 7.4+ |
 | **Hard dependency** | Active Altijara theme (`altijara-theme` / `altijara`) |
 | **Soft dependency** | TranslatePress (`trp_get_current_language`) |
@@ -31,11 +31,12 @@ It also gives editors an admin hub (Theme Options–style UI) for:
 ## Install & activate
 
 1. Deploy folder to `wp-content/plugins/altijara-content-tools/`
-2. Deploy Altijara theme including the `altijara_cache_key_parts` filter in `inc/core/caching.php` (required so EN/AR section caches do not collide)
-3. Activate **Altijara theme**, then **Altijara Content Tools**
-4. Recommended: activate TranslatePress (AR default + EN)
+2. Activate **Altijara theme**, then **Altijara Content Tools**
+3. Recommended: activate TranslatePress (AR default + EN)
 
-Without the theme, the plugin shows an admin error and loads no modules. Without TranslatePress, language detection falls back to the site locale (same idea as `altijara_is_english_view()`).
+**No theme file changes required.** The plugin hooks the theme’s existing `WP_Query` / transient path.
+
+Without the theme, the plugin shows an admin error and loads no modules. Without TranslatePress, language detection uses `/en/` in the URL, then Arabic.
 
 ---
 
@@ -94,10 +95,11 @@ Always included: `both` and posts with no meta.
 
 ### How filtering is applied
 
-1. `Altijara_CT_Lang_Query::filter_front_queries` (`pre_get_posts`) sets `altijara_ct_exclude_lang` when the query should be filtered.
-2. `posts_clauses` (priority 25) adds SQL that excludes posts of type `post` whose meta equals the excluded language. Other post types in mixed queries are left alone.
-3. `rest_post_query` sets the same query flag for REST post collections (category load-more via `wp-json`, etc.).
-4. Admin + `admin-ajax` are **not** language-filtered (Section Manager pickers stay complete).
+1. On front `wp`, purge Altijara section transients (`altijara_cache_purge_all`) so AR/EN never reuse one shared ID list from the stock theme cache.
+2. `pre_get_posts` on **all** front post queries (home sections + archives): include `meta_query` (`both` + current + missing) and over-fetch.
+3. `the_posts` trims back to the section’s requested count.
+4. `rest_post_query` applies the same include meta for REST collections.
+5. Admin + `admin-ajax` are **not** language-filtered (Section Manager pickers stay complete).
 
 Opt out of filtering on a custom `WP_Query` by setting:
 
@@ -107,25 +109,24 @@ Opt out of filtering on a custom `WP_Query` by setting:
 
 ### Language detection
 
-`altijara_ct_current_lang()` returns `en` | `ar` | `other`:
+`altijara_ct_current_lang()` returns `en` | `ar`:
 
-1. Prefer theme `altijara_is_english_view()` when defined
-2. Else `trp_get_current_language()` if TranslatePress is present
-3. Else `determine_locale()` / `get_locale()`
+1. Request path contains `/en/`
+2. Else TranslatePress current language is English
+3. Else Arabic
+
+Never uses `get_locale()` (often `en_US` on the Arabic front).
 
 ---
 
-## Theme coupling: cache keys
+## Theme coupling (no patches)
 
-Theme helper (`altijara-theme/inc/core/caching.php`):
+Stock Altijara uses `altijara_query_posts()` → transient cache → `WP_Query`. The plugin does not edit theme files. It:
 
-```php
-$parts = apply_filters( 'altijara_cache_key_parts', array(), $group, $args );
-```
+- Clears those transients on each front view (avoids EN/AR cache collision)
+- Filters every front `WP_Query` for posts via core hooks
 
-The plugin appends `lang` => current language so `altijara_query_posts()` / section transients are language-aware. Without this theme patch, AR and EN could share one cached ID list after filtering.
-
-Content saves still purge Altijara transients via the theme’s existing `save_post` invalidation.
+Optional: if a customized theme adds `altijara_cache_key_parts` / `altijara_query_posts_args` / `altijara_query_posts_results`, the plugin still hooks them for a lighter path.
 
 ---
 
@@ -246,6 +247,39 @@ Editor saves _altijara_lang_visibility
 ---
 
 ## Changelog
+
+### 1.1.8
+
+- No theme file changes required: filter stock `WP_Query` + purge theme section transients on front
+- Keep optional hooks if a customized theme exposes them
+
+### 1.1.7
+
+- Align with theme `altijara_query_posts`: include meta_query (`both` + current + missing), over-fetch/slice
+- Defer language static cache until after `wp`; TRP + `/en/` URL detection
+- Main-query fallback only; theme path skips duplicate exclude SQL
+
+### 1.1.6
+
+- Language detection: `/en/` URL first, then TranslatePress language (not `get_locale`)
+- Admin debug overlay: visit any front URL with `?altijara_debug_lang=1` while logged in as admin
+
+### 1.1.5
+
+- Over-fetch section queries before language strip so mixed AR/EN/Both categories are not empty
+- English detection uses REQUEST_URI only (no HTTP referer)
+
+### 1.1.4
+
+- Language from URL only: `/en/` = English, all other paths = Arabic (stop using `get_locale()`, which kept EN-only posts on the Arabic front)
+
+### 1.1.2
+
+- Fix English `/en/` detection (URL path + TRP globals) so EN-only posts appear on English homepage sections
+
+### 1.1.1
+
+- Fix EN-only posts leaking into Arabic homepage sections (theme `altijara_query_posts` result filter + bilingual lang detection + cache bust)
 
 ### 1.1.0
 

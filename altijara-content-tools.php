@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Altijara Content Tools
  * Description: Language visibility (AR/EN/Both) for TranslatePress, missing featured-image tools, and content health recommendations — designed for the Altijara theme.
- * Version: 1.1.0
+ * Version: 1.1.8
  * Author: O2Nations
  * Author URI: https://o2nations.com/
  * Text Domain: altijara-content-tools
@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ALTIJARA_CT_VERSION', '1.1.0' );
+define( 'ALTIJARA_CT_VERSION', '1.1.8' );
 define( 'ALTIJARA_CT_FILE', __FILE__ );
 define( 'ALTIJARA_CT_DIR', plugin_dir_path( __FILE__ ) );
 define( 'ALTIJARA_CT_URI', plugin_dir_url( __FILE__ ) );
@@ -42,33 +42,127 @@ function altijara_ct_trp_available() {
 }
 
 /**
- * Current front language code: en | ar | other.
+ * Whether a language code string is English.
  *
- * Mirrors theme altijara_is_english_view() when present.
+ * @param string $lang Raw language / locale.
+ * @return bool
+ */
+function altijara_ct_code_is_english( $lang ) {
+	$lang = strtolower( str_replace( '_', '-', trim( (string) $lang ) ) );
+	if ( '' === $lang ) {
+		return false;
+	}
+	return ( 0 === strpos( $lang, 'en' ) );
+}
+
+/**
+ * Whether a URL path contains a TranslatePress /en/ segment.
  *
- * @return string en|ar|other
+ * Avoids false positives like /energy/.
+ *
+ * @param string $uri URI or path.
+ * @return bool
+ */
+function altijara_ct_path_has_english_segment( $uri ) {
+	$path = (string) wp_parse_url( (string) $uri, PHP_URL_PATH );
+	if ( '' === $path ) {
+		$path = (string) $uri;
+	}
+	return (bool) preg_match( '#/(?:en)(?:/|$|\?)#i', $path );
+}
+
+/**
+ * Detect English from the current request URL (TranslatePress /en/).
+ *
+ * @return bool
+ */
+function altijara_ct_request_is_english_path() {
+	if ( empty( $_SERVER['REQUEST_URI'] ) ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		return false;
+	}
+	$uri = (string) wp_unslash( $_SERVER['REQUEST_URI'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+	return altijara_ct_path_has_english_segment( $uri );
+}
+
+/**
+ * Raw debug snapshot of language detection signals.
+ *
+ * @return array<string, mixed>
+ */
+function altijara_ct_lang_debug_info() {
+	$uri = isset( $_SERVER['REQUEST_URI'] ) ? (string) wp_unslash( $_SERVER['REQUEST_URI'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+	$trp = '';
+	if ( ! empty( $GLOBALS['TRP_LANGUAGE'] ) ) {
+		$trp = (string) $GLOBALS['TRP_LANGUAGE'];
+	} elseif ( function_exists( 'trp_get_current_language' ) ) {
+		$trp = (string) trp_get_current_language();
+	}
+	$resolved = altijara_ct_current_lang();
+	return array(
+		'resolved'     => $resolved,
+		'include'      => 'both|' . $resolved . '|missing',
+		'exclude'      => class_exists( 'Altijara_CT_Lang_Query', false ) ? Altijara_CT_Lang_Query::excluded_lang() : '',
+		'request_uri'  => $uri,
+		'url_is_en'    => altijara_ct_request_is_english_path(),
+		'trp_language' => $trp,
+		'trp_is_en'    => altijara_ct_code_is_english( $trp ),
+		'wp_action'    => did_action( 'wp' ) ? 'yes' : 'no',
+		'locale'       => function_exists( 'determine_locale' ) ? (string) determine_locale() : (string) get_locale(),
+	);
+}
+
+/**
+ * Resolve front language without caching (URL → TRP → ar).
+ *
+ * @return string en|ar
+ */
+function altijara_ct_resolve_current_lang() {
+	// 1) Visible /en/ in the request path.
+	if ( altijara_ct_request_is_english_path() ) {
+		return 'en';
+	}
+
+	// 2) TranslatePress may know English even if the server URI was rewritten.
+	$trp = '';
+	if ( ! empty( $GLOBALS['TRP_LANGUAGE'] ) ) {
+		$trp = (string) $GLOBALS['TRP_LANGUAGE'];
+	} elseif ( altijara_ct_trp_available() ) {
+		$trp = (string) trp_get_current_language();
+	}
+	if ( altijara_ct_code_is_english( $trp ) ) {
+		return 'en';
+	}
+
+	// 3) Default front language = Arabic.
+	return 'ar';
+}
+
+/**
+ * Current front language code: en | ar.
+ *
+ * Priority (never use get_locale — it breaks Arabic default):
+ * 1. URL path contains /en/
+ * 2. TranslatePress current language is English
+ * 3. Otherwise Arabic
+ *
+ * Static cache only after `wp` so TRP is ready before home sections query.
+ *
+ * @return string en|ar
  */
 function altijara_ct_current_lang() {
-	if ( function_exists( 'altijara_is_english_view' ) && altijara_is_english_view() ) {
-		return 'en';
+	static $resolved = null;
+
+	// Before main WP query finishes, always re-resolve (avoid locking AR too early).
+	if ( ! did_action( 'wp' ) ) {
+		return altijara_ct_resolve_current_lang();
 	}
 
-	$lang = '';
-	if ( altijara_ct_trp_available() ) {
-		$lang = (string) trp_get_current_language();
+	if ( null !== $resolved ) {
+		return $resolved;
 	}
-	if ( '' === $lang ) {
-		$lang = function_exists( 'determine_locale' ) ? (string) determine_locale() : (string) get_locale();
-	}
-	$lang = strtolower( str_replace( '_', '-', $lang ) );
 
-	if ( 0 === strpos( $lang, 'en' ) ) {
-		return 'en';
-	}
-	if ( 0 === strpos( $lang, 'ar' ) ) {
-		return 'ar';
-	}
-	return 'other';
+	$resolved = altijara_ct_resolve_current_lang();
+	return $resolved;
 }
 
 /**
@@ -145,11 +239,50 @@ function altijara_ct_bootstrap() {
 	Altijara_CT_Bulk_Assign::init();
 	Altijara_CT_Admin_Hub::init();
 
+	altijara_ct_maybe_bust_theme_cache();
+
+	add_action( 'wp_footer', 'altijara_ct_debug_lang_footer', 99 );
+
 	if ( is_admin() && ! altijara_ct_trp_available() ) {
 		add_action( 'admin_notices', 'altijara_ct_notice_trp_optional' );
 	}
 }
 add_action( 'after_setup_theme', 'altijara_ct_bootstrap', 20 );
+
+/**
+ * Admin-only language debug: append ?altijara_debug_lang=1 to any front URL.
+ */
+function altijara_ct_debug_lang_footer() {
+	if ( is_admin() || ! current_user_can( 'manage_options' ) ) {
+		return;
+	}
+	if ( empty( $_GET['altijara_debug_lang'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		return;
+	}
+	$info = altijara_ct_lang_debug_info();
+	echo "\n<!-- altijara_ct_lang_debug " . esc_html( wp_json_encode( $info ) ) . " -->\n";
+	echo '<div id="altijara-ct-lang-debug" style="position:fixed;z-index:999999;bottom:12px;inset-inline-start:12px;max-width:420px;padding:12px 14px;border-radius:10px;background:#1a222d;color:#fff;font:12px/1.45 monospace;box-shadow:0 8px 24px rgba(0,0,0,.35);">';
+	echo '<strong style="display:block;margin-bottom:6px;color:#1897b8;">Altijara CT language debug</strong>';
+	foreach ( $info as $key => $val ) {
+		echo esc_html( (string) $key ) . ': <b>' . esc_html( is_bool( $val ) ? ( $val ? 'true' : 'false' ) : (string) $val ) . '</b><br>';
+	}
+	echo '<span style="opacity:.75">Expected on /en/: resolved=en, include=both|en|missing</span>';
+	echo '</div>';
+}
+
+/**
+ * One-time theme section cache purge after language-filter fixes.
+ */
+function altijara_ct_maybe_bust_theme_cache() {
+	$flag = 'altijara_ct_cache_bust';
+	if ( ALTIJARA_CT_VERSION === get_option( $flag, '' ) ) {
+		return;
+	}
+	if ( function_exists( 'altijara_cache_purge_all' ) ) {
+		altijara_cache_purge_all();
+	}
+	update_option( $flag, ALTIJARA_CT_VERSION, false );
+}
 
 /**
  * Admin notice: theme required.
