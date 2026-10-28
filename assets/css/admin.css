@@ -1,0 +1,399 @@
+/* Altijara Content Tools — overlay on theme admin shell + list badges */
+
+.altijara-ct-lang-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.5;
+  border: 1px solid #dcdcde;
+  background: #f6f7f7;
+  color: #1d2327;
+}
+
+.altijara-ct-lang-badge--both {
+  background: #e8f4f8;
+  border-color: #1897b8;
+  color: #0f5f73;
+}
+
+.altijara-ct-lang-badge--ar {
+  background: #fff8e5;
+  border-color: #f0c36d;
+  color: #7a5b00;
+}
+
+.altijara-ct-lang-badge--en {
+  background: #f0f6fc;
+  border-color: #72aee6;
+  color: #0b6e8a;
+}
+
+.altijara-ct-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.altijara-ct-stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 18px 16px;
+  border-radius: 12px;
+  border: 1px solid #dcdcde;
+  background: #fff;
+  text-decoration: none;
+  color: #1d2327;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+  position: relative;
+}
+
+.altijara-ct-stat-card__icon {
+  position: absolute;
+  top: 14px;
+  inset-inline-end: 14px;
+  color: #1897b8;
+  opacity: 0.55;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.altijara-ct-stat-card:hover,
+.altijara-ct-stat-card:focus {
+  border-color: #1897b8;
+  box-shadow: 0 6px 18px rgba(24, 151, 184, 0.12);
+  transform: translateY(-1px);
+  color: #1d2327;
+}
+
+.altijara-ct-stat-card__count {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #0f5f73;
+}
+
+.altijara-ct-stat--ar .altijara-ct-stat-card__count {
+  color: #a67c00;
+}
+
+.altijara-ct-stat--en .altijara-ct-stat-card__count {
+  color: #2271b1;
+}
+
+.altijara-ct-stat-card__label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.altijara-ct-stat-card__hint {
+  font-size: 11px;
+  color: #646970;
+}
+
+.altijara-ct-tool-card {
+  max-width: 520px;
+}
+
+.altijara-ct-reco-callout {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  border-radius: 10px;
+  background: #f0f6fc;
+  border: 1px solid #c5d9ed;
+}
+
+.altijara-ct-reco-callout .dashicons {
+  color: #1897b8;
+  margin-top: 2px;
+}
+
+.altijara-ct-reco-callout strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.altijara-ct-reco-callout p {
+  margin: 0;
+  color: #50575e;
+}
+
+.altijara-ct-reco-heading {
+  margin: 20px 0 10px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.altijara-ct-reco-table {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.altijara-ct-reco-actions a {
+  text-decoration: none;
+}
+
+.altijara-ct-danger {
+  color: #b32d2e !important;
+}
+
+.altijara-ct-no-thumb-filter {
+  vertical-align: middle;
+}
+
+.altijara-ct-quick-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.altijara-ct-quick-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid #dcdcde;
+  background: #f6f7f7;
+  color: #1d2327;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.altijara-ct-quick-chip .dashicons {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  color: #1897b8;
+}
+
+.altijara-ct-quick-chip:hover,
+.altijara-ct-quick-chip:focus {
+  border-color: #1897b8;
+  background: #e8f4f8;
+  color: #0f5f73;
+}
+
+.altijara-ct-quick-chip.is-warn {
+  background: #fff8e5;
+  border-color: #f0c36d;
+}
+
+.altijara-ct-footnote {
+  margin-top: 16px;
+}
+
+.altijara-ct-health-hero {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 18px 20px;
+  border-radius: 12px;
+  border: 1px solid #dcdcde;
+  background: #fff;
+  margin-bottom: 14px;
+}
+
+.altijara-ct-health-hero.is-warn {
+  background: #fff8e5;
+  border-color: #f0c36d;
+}
+
+.altijara-ct-health-hero.is-ok {
+  background: #edfaef;
+  border-color: #68de7c;
+}
+
+.altijara-ct-health-hero__count {
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1;
+  color: #0f5f73;
+  min-width: 64px;
+}
+
+.altijara-ct-health-hero.is-warn .altijara-ct-health-hero__count {
+  color: #9a6700;
+}
+
+.altijara-ct-health-hero strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.altijara-ct-health-hero p {
+  margin: 0;
+  color: #50575e;
+  font-size: 13px;
+}
+
+.altijara-ct-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.altijara-ct-tip-card {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: #f0f6fc;
+  border: 1px solid #c5d9ed;
+}
+
+.altijara-ct-tip-card--inline {
+  margin-top: 4px;
+}
+
+.altijara-ct-tip-card .dashicons {
+  color: #1897b8;
+  margin-top: 2px;
+}
+
+.altijara-ct-tip-card strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.altijara-ct-tip-card p,
+.altijara-ct-tip-card ul {
+  margin: 0;
+  color: #50575e;
+  font-size: 13px;
+}
+
+.altijara-ct-tip-card ul {
+  padding-inline-start: 18px;
+  margin-top: 6px;
+}
+
+.altijara-ct-tip-card li {
+  margin-bottom: 2px;
+}
+
+.altijara-ct-bulk-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(220px, 0.8fr);
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .altijara-ct-bulk-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.altijara-ct-bulk-card {
+  padding: 18px 20px;
+  border-radius: 12px;
+  border: 1px solid #dcdcde;
+  background: #fff;
+}
+
+.altijara-ct-bulk-card__title {
+  display: block;
+  font-size: 15px;
+  margin-bottom: 6px;
+}
+
+.altijara-ct-bulk-aside {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.altijara-ct-field {
+  margin: 16px 0;
+}
+
+.altijara-ct-field label,
+.altijara-ct-field__label {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.altijara-ct-field textarea {
+  width: 100%;
+  max-width: 100%;
+  font-family: Consolas, Monaco, monospace;
+  font-size: 13px;
+  line-height: 1.45;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #c3c4c7;
+  box-shadow: none;
+}
+
+.altijara-ct-field textarea:focus {
+  border-color: #1897b8;
+  box-shadow: 0 0 0 1px #1897b8;
+  outline: none;
+}
+
+.altijara-ct-bulk-meter {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #646970;
+}
+
+.altijara-ct-bulk-meter.is-ready {
+  color: #0f5f73;
+  font-weight: 600;
+}
+
+.altijara-ct-bulk-meter.is-over {
+  color: #b32d2e;
+  font-weight: 600;
+}
+
+.altijara-ct-lang-radios {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.altijara-ct-lang-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #dcdcde;
+  background: #f8f9fb;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.altijara-ct-lang-radio:has(input:checked) {
+  border-color: #1897b8;
+  background: #e8f4f8;
+  color: #0f5f73;
+  font-weight: 600;
+}
+
+.altijara-ct-bulk-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.altijara-ct-bulk-skip-list {
+  margin: 6px 0 0;
+  padding-inline-start: 18px;
+}
